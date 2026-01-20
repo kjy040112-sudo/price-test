@@ -21,6 +21,7 @@
         th, td { border: 1px solid #dee2e6; padding: 12px; text-align: center; font-size: 14px; }
         th { background: #e9ecef; }
         .start-btn { padding: 20px 60px; font-size: 24px; background: #1a73e8; color: white; border: none; border-radius: 40px; cursor: pointer; font-weight: bold; }
+        .save-btn { padding: 15px; font-size: 18px; background: #34a853; color: white; border: none; border-radius: 10px; cursor: pointer; width: 100%; margin-top: 10px; font-weight: bold; }
         .notice { font-size: 24px; color: #333; margin-bottom: 30px; font-weight: bold; line-height: 1.5; }
     </style>
 </head>
@@ -53,7 +54,8 @@
         <div id="report">
             <h2 style="text-align:center;">📊 실험 분석 결과</h2>
             <div id="report-table"></div>
-            <button class="start-btn" style="width:100%; margin-top:20px; font-size:18px;" onclick="location.reload()">다시 시작</button>
+            <button id="save-data-btn" class="save-btn" onclick="sendDataToSheet()">실험 데이터 제출하기</button>
+            <button class="start-btn" style="width:100%; margin-top:10px; font-size:18px; background:#dadce0; color:#333;" onclick="location.reload()">다시 시작</button>
         </div>
     </div>
 
@@ -62,6 +64,9 @@
         let round = 0, correctCount = 0, startTime, timerInterval, currentTarget, currentCat;
         let isPractice = false, practiceStep = 0;
         let roundCategories = [];
+        
+        // 제출용 구글 웹 앱 URL 반영
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyRT_ofK7O1lktdFPb2HZQeqBeyNaYruRnRBvfMVQe1WKvDmIephVMalX3aY8vzLel_/exec";
 
         function startPractice() {
             isPractice = true;
@@ -175,8 +180,8 @@
                 display.innerText = `${p1_val.toLocaleString()}\n+ ${p2_val.toLocaleString()}`;
                 
                 if(currentCat === "8000") {
-                    step = 10000; // 보기간 간격은 1만으로 하되
-                    ans = Math.floor(currentTarget / 10000) * 10000 + 5000; // 천단위를 5000으로 고정
+                    step = 10000;
+                    ans = Math.floor(currentTarget / 10000) * 10000 + 5000;
                 } else {
                     step = 10000;
                     ans = Math.round(currentTarget / 10000) * 10000;
@@ -249,6 +254,36 @@
                 </tr>`;
             });
             document.getElementById('report-table').innerHTML = html + "</table>";
+        }
+
+        // 구글 시트로 데이터 전송 함수
+        function sendDataToSheet() {
+            const btn = document.getElementById('save-data-btn');
+            btn.innerText = "전송 중...";
+            btn.disabled = true;
+
+            const avgRT = log.reduce((a, b) => a + b.rt, 0) / log.length;
+            const payload = {
+                score: correctCount,
+                avgRT: avgRT.toFixed(2),
+                log: JSON.stringify(log)
+            };
+
+            fetch(SCRIPT_URL, {
+                method: "POST",
+                mode: "no-cors",
+                cache: "no-cache",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            }).then(() => {
+                alert("데이터가 성공적으로 제출되었습니다!");
+                btn.innerText = "제출 완료";
+                btn.style.background = "#dadce0";
+            }).catch(err => {
+                alert("전송 실패. URL 설정을 확인해주세요.");
+                btn.disabled = false;
+                btn.innerText = "다시 시도";
+            });
         }
     </script>
 </body>
