@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>가격 인지 심리 실험</title>
+    <style>
+        body { font-family: 'Malgun Gothic', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background-color: #f0f2f5; }
+        #container { text-align: center; background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); width: 680px; min-height: 540px; position: relative; display: flex; flex-direction: column; justify-content: center; }
+        #status-bar { position: absolute; top: 20px; right: 30px; text-align: right; line-height: 1.6; font-size: 16px; color: #5f6368; font-weight: bold; }
+        #start-screen h1 { color: #1a73e8; margin-bottom: 40px; font-size: 36px; }
+        #feedback { font-size: 60px; font-weight: bold; display: none; margin: 20px 0; }
+        #countdown { font-size: 120px; color: #ff5722; font-weight: bold; display: none; }
+        #game-ui { display: none; }
+        #timer-display { font-size: 24px; color: #d93025; font-weight: bold; margin-bottom: 15px; }
+        #display { font-size: 52px; font-weight: bold; margin-bottom: 35px; color: #202124; line-height: 1.2; white-space: pre-line; }
+        #buttons { display: flex; flex-direction: column; align-items: center; gap: 12px; width: 100%; max-width: 400px; margin: 0 auto; }
+        .btn { background: #ffffff; border: 2px solid #dadce0; padding: 18px; font-size: 24px; border-radius: 12px; cursor: pointer; transition: 0.2s; font-weight: bold; width: 100%; }
+        .btn:hover { background: #f8f9fa; border-color: #1a73e8; color: #1a73e8; }
+        #report { display: none; text-align: left; width: 100%; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; background: #fff; }
+        th, td { border: 1px solid #dee2e6; padding: 12px; text-align: center; font-size: 14px; }
+        th { background: #e9ecef; }
+        .start-btn { padding: 20px 60px; font-size: 24px; background: #1a73e8; color: white; border: none; border-radius: 40px; cursor: pointer; font-weight: bold; }
+        .notice { font-size: 24px; color: #333; margin-bottom: 30px; font-weight: bold; line-height: 1.5; }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div id="status-bar" style="display:none;">
+            <div>Score: <span id="current-score">0</span>/10</div>
+            <div style="font-size: 14px; font-weight: normal;">Progress: <span id="current-round">0</span>/10</div>
+        </div>
+
+        <div id="start-screen">
+            <h1>가격 인지 심리 실험</h1>
+            <button class="start-btn" onclick="startPractice()">연습 시작</button>
+        </div>
+
+        <div id="notice-screen" style="display:none;">
+            <div class="notice" id="notice-text"></div>
+            <button class="start-btn" id="notice-btn" onclick="">확인</button>
+        </div>
+
+        <div id="feedback"></div>
+        <div id="countdown"></div>
+
+        <div id="game-ui">
+            <div id="timer-display">0.00s</div>
+            <div id="display"></div>
+            <div id="buttons"></div>
+        </div>
+
+        <div id="report">
+            <h2 style="text-align:center;">📊 실험 분석 결과</h2>
+            <div id="report-table"></div>
+            <button class="start-btn" style="width:100%; margin-top:20px; font-size:18px;" onclick="location.reload()">다시 시작</button>
+        </div>
+    </div>
+
+    <script>
+        const log = [];
+        let round = 0, correctCount = 0, startTime, timerInterval, currentTarget, currentCat;
+        let isPractice = false, practiceStep = 0;
+        let roundCategories = [];
+
+        function startPractice() {
+            isPractice = true;
+            document.getElementById('start-screen').style.display = 'none';
+            document.getElementById('notice-screen').style.display = 'block';
+            document.getElementById('notice-text').innerHTML = "본 실험 전 연습 문제를 풀어봅니다.";
+            document.getElementById('notice-btn').innerText = "연습 시작";
+            document.getElementById('notice-btn').onclick = () => {
+                document.getElementById('notice-screen').style.display = 'none';
+                startRound();
+            };
+        }
+
+        function finishPractice() {
+            isPractice = false;
+            document.getElementById('game-ui').style.display = 'none';
+            document.getElementById('feedback').style.display = 'none';
+            document.getElementById('notice-screen').style.display = 'block';
+            document.getElementById('notice-text').innerHTML = "연습이 끝났습니다.<br>본 실험을 시작합니다!";
+            document.getElementById('notice-btn').innerText = "실제 시작";
+            document.getElementById('notice-btn').onclick = () => {
+                document.getElementById('notice-screen').style.display = 'none';
+                document.getElementById('status-bar').style.display = 'block';
+                initGame();
+            };
+        }
+
+        function initGame() {
+            const sets = [
+                ["8000","8000","8000","9000","9000","9000","9000","9900","9900","9900"],
+                ["8000","8000","8000","8000","9000","9000","9000","9000","9900","9900"]
+            ];
+            roundCategories = sets[Math.floor(Math.random() * sets.length)].sort(() => Math.random() - 0.5);
+            runCountdown();
+        }
+
+        function runCountdown() {
+            document.getElementById('game-ui').style.display = 'none';
+            document.getElementById('feedback').style.display = 'none';
+            const cd = document.getElementById('countdown');
+            cd.style.display = 'block';
+            let count = 3;
+            cd.innerText = count;
+            const interval = setInterval(() => {
+                count--;
+                if (count > 0) cd.innerText = count;
+                else {
+                    clearInterval(interval);
+                    cd.style.display = 'none';
+                    startRound();
+                }
+            }, 1000);
+        }
+
+        function showFeedback(isCorrect) {
+            document.getElementById('game-ui').style.display = 'none';
+            const fb = document.getElementById('feedback');
+            fb.style.display = 'block';
+            fb.innerText = isCorrect ? "정답!" : "오답...";
+            fb.style.color = isCorrect ? "#188038" : "#d93025";
+            
+            setTimeout(() => {
+                fb.style.display = 'none';
+                if (isPractice) {
+                    practiceStep++;
+                    if (practiceStep < 2) startRound();
+                    else finishPractice();
+                } else {
+                    if (round >= 10) showReport();
+                    else runCountdown();
+                }
+            }, 800);
+        }
+
+        function generatePrice(cat) {
+            let thousand = (cat === "8000") ? 8 : 9;
+            const base = (Math.floor(Math.random() * 9) + 1) * 10000 + (thousand * 1000);
+            let val = base;
+            if (cat === "9900") val += 900;
+            return val;
+        }
+
+        function startRound() {
+            const display = document.getElementById('display');
+            const btnArea = document.getElementById('buttons');
+            document.getElementById('game-ui').style.display = 'block';
+            btnArea.innerHTML = "";
+
+            let isSumStep = false;
+            if (!isPractice) {
+                document.getElementById('current-round').innerText = round + 1;
+                currentCat = roundCategories[round];
+                isSumStep = (round >= 5);
+            } else {
+                currentCat = (practiceStep === 0) ? "8000" : "9900";
+                isSumStep = (practiceStep === 1);
+            }
+
+            const p1_val = generatePrice(currentCat);
+            let ans, step, choicesCount;
+
+            if (!isSumStep) {
+                currentTarget = p1_val;
+                display.innerText = p1_val.toLocaleString();
+                step = 5000;
+                choicesCount = 4;
+                ans = Math.round(currentTarget / step) * step;
+            } else {
+                const p2_val = generatePrice(currentCat);
+                currentTarget = p1_val + p2_val;
+                display.innerText = `${p1_val.toLocaleString()}\n+ ${p2_val.toLocaleString()}`;
+                
+                if(currentCat === "8000") {
+                    step = 10000; // 보기간 간격은 1만으로 하되
+                    ans = Math.floor(currentTarget / 10000) * 10000 + 5000; // 천단위를 5000으로 고정
+                } else {
+                    step = 10000;
+                    ans = Math.round(currentTarget / 10000) * 10000;
+                }
+                choicesCount = 3;
+            }
+
+            let targetPos = Math.floor(Math.random() * choicesCount);
+            let finalOpts = [];
+            for(let i=0; i<choicesCount; i++) {
+                finalOpts.push(ans + (i - targetPos) * step);
+            }
+            
+            finalOpts.forEach(opt => {
+                const b = document.createElement('button');
+                b.className = 'btn';
+                b.innerText = opt.toLocaleString();
+                b.onclick = () => submit(opt, ans);
+                btnArea.appendChild(b);
+            });
+
+            startTime = performance.now();
+            timerInterval = setInterval(() => {
+                const elapsed = (performance.now() - startTime) / 1000;
+                document.getElementById('timer-display').innerText = elapsed.toFixed(2) + "s";
+            }, 10);
+        }
+
+        function submit(opt, ans) {
+            clearInterval(timerInterval);
+            const rt = (performance.now() - startTime) / 1000;
+            const isCorrect = (opt === ans);
+            
+            if (!isPractice) {
+                if (isCorrect) {
+                    correctCount++;
+                    document.getElementById('current-score').innerText = correctCount;
+                }
+                log.push({ cat: currentCat, correct: isCorrect, rt: rt, bias: isCorrect ? "None" : (opt < ans ? "Low" : "High") });
+                round++;
+            }
+            showFeedback(isCorrect);
+        }
+
+        function showReport() {
+            document.getElementById('status-bar').style.display = 'none';
+            document.getElementById('report').style.display = 'block';
+            const avgRT = log.reduce((a, b) => a + b.rt, 0) / log.length;
+            
+            let html = "<table><tr style='background:#f1f3f4;'><th>유형</th><th>정답률</th><th>속도</th><th>편차</th><th>경향</th></tr>";
+            ["8000", "9000", "9900"].forEach(c => {
+                const items = log.filter(l => l.cat === c);
+                if (items.length === 0) return;
+                const acc = (items.filter(i => i.correct).length / items.length * 100).toFixed(0);
+                const mRT = items.reduce((a, b) => a + b.rt, 0) / items.length;
+                const dev = mRT - avgRT;
+                const lowCount = items.filter(i => i.bias === "Low").length;
+                const highCount = items.filter(i => i.bias === "High").length;
+                
+                let biasTxt = "-";
+                if (lowCount > highCount) biasTxt = "<span style='color:#1a73e8'>실제보다 싸다고 생각</span>";
+                else if (highCount > lowCount) biasTxt = "<span style='color:#d93025'>실제보다 비싸다고 생각</span>";
+                
+                html += `<tr>
+                    <td><b>${c}원</b></td>
+                    <td>${acc}%</td>
+                    <td>${mRT.toFixed(2)}s</td>
+                    <td style="color:${dev > 0 ? '#d93025':'#188038'}">${(dev >= 0 ? '+' : '') + dev.toFixed(2)}s</td>
+                    <td>${biasTxt}</td>
+                </tr>`;
+            });
+            document.getElementById('report-table').innerHTML = html + "</table>";
+        }
+    </script>
+</body>
+</html>
