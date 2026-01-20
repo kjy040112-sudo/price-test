@@ -65,8 +65,8 @@
         let isPractice = false, practiceStep = 0;
         let roundCategories = [];
         
-        // 제출용 구글 웹 앱 URL 반영
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyRT_ofK7O1lktdFPb2HZQeqBeyNaYruRnRBvfMVQe1WKvDmIephVMalX3aY8vzLel_/exec";
+        // 요청하신 URL 반영
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxwYdweOqh5W__KX3HYT9RXhDG93bhdAPIokj5R7hnCpeakcOO31ExT9B_hsaBejZNQ/exec";
 
         function startPractice() {
             isPractice = true;
@@ -95,6 +95,7 @@
         }
 
         function initGame() {
+            // 10문제 구성
             const sets = [
                 ["8000","8000","8000","9000","9000","9000","9000","9900","9900","9900"],
                 ["8000","8000","8000","8000","9000","9000","9000","9000","9900","9900"]
@@ -256,7 +257,6 @@
             document.getElementById('report-table').innerHTML = html + "</table>";
         }
 
-        // 구글 시트로 데이터 전송 함수
         function sendDataToSheet() {
             const btn = document.getElementById('save-data-btn');
             btn.innerText = "전송 중...";
